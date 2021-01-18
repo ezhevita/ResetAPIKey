@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ArchiSteamFarm;
 using ArchiSteamFarm.Localization;
@@ -14,11 +15,12 @@ namespace ResetAPIKey {
 	[UsedImplicitly]
 	public class ResetAPIKey : IBotCommand {
 		public void OnLoaded() {
-			ASF.ArchiLogger.LogGenericInfo(nameof(ResetAPIKey) + " is loaded!");
+			ASF.ArchiLogger.LogGenericInfo(nameof(ResetAPIKey) + " by Vital7 | Support & source code: https://github.com/Vital7/ResetAPIKey");
 		}
 
 		public string Name => nameof(ResetAPIKey);
-		public Version Version => new(1, 0, 0, 0);
+		public Version Version => Assembly.GetExecutingAssembly().GetName().Version ?? throw new InvalidOperationException(nameof(Version));
+
 		public async Task<string?> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) {
 			return args[0].ToUpperInvariant() switch {
 				"RESETAPIKEY" when args.Length > 1 => await ResponseResetAPIKey(steamID, Utilities.GetArgsAsText(args, 1, ",")),
