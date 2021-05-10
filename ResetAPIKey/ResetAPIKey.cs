@@ -5,9 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using ArchiSteamFarm;
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Localization;
-using ArchiSteamFarm.Plugins;
+using ArchiSteamFarm.Plugins.Interfaces;
+using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Steam.Integration;
+using ArchiSteamFarm.Steam.Interaction;
+using ArchiSteamFarm.Steam.Storage;
 using JetBrains.Annotations;
 
 namespace ResetAPIKey {
@@ -39,7 +43,7 @@ namespace ResetAPIKey {
 			}
 
 			const string request = "/dev/revokekey";
-			bool result = await bot.ArchiWebHandler.UrlPostWithSession(ArchiWebHandler.SteamCommunityURL, request, new Dictionary<string, string>(1)).ConfigureAwait(false);
+			bool result = await bot.ArchiWebHandler.UrlPostWithSession(new Uri(ArchiWebHandler.SteamCommunityURL, request), new Dictionary<string, string>(1)).ConfigureAwait(false);
 			return Commands.FormatBotResponse(result ? Strings.Success : Strings.WarningFailed, bot.BotName);
 		}
 
