@@ -17,23 +17,51 @@ using JetBrains.Annotations;
 namespace ResetAPIKey {
 	[Export(typeof(IPlugin))]
 	[UsedImplicitly]
-	public class ResetAPIKey : IBotCommand {
+	public class ResetAPIKeyPlugin : IBotCommand {
 		public void OnLoaded() {
-			ASF.ArchiLogger.LogGenericInfo(nameof(ResetAPIKey) + " by Vital7 | Support & source code: https://github.com/Vital7/ResetAPIKey");
+			Assembly assembly = Assembly.GetExecutingAssembly();
+			string repository = assembly
+				.GetCustomAttributes<AssemblyMetadataAttribute>()
+				.First(x => x.Key == "RepositoryUrl")
+				.Value ?? throw new InvalidOperationException(nameof(AssemblyMetadataAttribute));
+
+			const string git = ".git";
+			int index = repository.IndexOf(git, StringComparison.Ordinal);
+			if (index >= 0) {
+				repository = repository[..(index + 1)];
+			}
+
+			string company = assembly
+				.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? throw new InvalidOperationException(nameof(AssemblyCompanyAttribute));
+
+			ASF.ArchiLogger.LogGenericInfo(Name + " by " + company + " | Support & source code: " + repository);
 		}
 
 		public string Name => nameof(ResetAPIKey);
 		public Version Version => Assembly.GetExecutingAssembly().GetName().Version ?? throw new InvalidOperationException(nameof(Version));
 
-		public async Task<string?> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) {
+		[CLSCompliant(false)]
+		public Task<string?> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) {
+			if (bot == null) {
+				throw new ArgumentNullException(nameof(bot));
+			}
+
+			if (string.IsNullOrEmpty(message)) {
+				throw new ArgumentNullException(nameof(message));
+			}
+
+			if (args == null) {
+				throw new ArgumentNullException(nameof(args));
+			}
+
 			return args[0].ToUpperInvariant() switch {
-				"RESETAPIKEY" when args.Length > 1 => await ResponseResetAPIKey(steamID, Utilities.GetArgsAsText(args, 1, ",")),
-				"RESETAPIKEY" => await ResponseResetAPIKey(bot, steamID).ConfigureAwait(false),
-				_ => null
+				"RESETAPIKEY" when args.Length > 1 => ResponseResetAPIKey(steamID, Utilities.GetArgsAsText(args, 1, ",")),
+				"RESETAPIKEY" => ResponseResetAPIKey(bot, steamID),
+				_ => Task.FromResult<string?>(null)
 			};
 		}
 
-		private async Task<string?> ResponseResetAPIKey(Bot bot, ulong steamID) {
+		private static async Task<string?> ResponseResetAPIKey(Bot bot, ulong steamID) {
 			if (!bot.HasAccess(steamID, BotConfig.EAccess.Master)) {
 				return null;
 			}
@@ -47,7 +75,7 @@ namespace ResetAPIKey {
 			return Commands.FormatBotResponse(result ? Strings.Success : Strings.WarningFailed, bot.BotName);
 		}
 
-		private async Task<string?> ResponseResetAPIKey(ulong steamID, string botNames) {
+		private static async Task<string?> ResponseResetAPIKey(ulong steamID, string botNames) {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 			if ((bots == null) || (bots.Count == 0)) {
 				return ASF.IsOwner(steamID) ? Commands.FormatStaticResponse(string.Format(CultureInfo.CurrentCulture, Strings.BotNotFound, botNames)) : null;
