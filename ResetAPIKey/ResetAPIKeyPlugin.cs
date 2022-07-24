@@ -11,7 +11,6 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Steam.Interaction;
-using ArchiSteamFarm.Steam.Storage;
 using JetBrains.Annotations;
 
 namespace ResetAPIKey {
