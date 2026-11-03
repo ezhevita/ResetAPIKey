@@ -4,6 +4,7 @@ using System.Composition;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Localization;
@@ -17,9 +18,9 @@ namespace ResetAPIKey;
 
 [Export(typeof(IPlugin))]
 [UsedImplicitly]
-public class ResetAPIKeyPlugin : IBotCommand2
+internal sealed class ResetAPIKeyPlugin : IBotCommand, IGitHubPluginUpdates
 {
-	public Task OnLoaded()
+	public Task OnLoaded(CancellationToken cancellationToken)
 	{
 		ASF.ArchiLogger.LogGenericInfo(Name + " by ezhevita | Support & source code: https://github.com/ezhevita/ResetAPIKey");
 
@@ -27,10 +28,10 @@ public class ResetAPIKeyPlugin : IBotCommand2
 	}
 
 	public string Name => nameof(ResetAPIKey);
+	public string RepositoryName => "ezhevita/ResetAPIKey";
 	public Version Version => Assembly.GetExecutingAssembly().GetName().Version ?? throw new InvalidOperationException(nameof(Version));
 
-	[CLSCompliant(false)]
-	public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0)
+	public Task<string?> OnBotCommand(Bot bot, EBotUserAccess access, string message, string[] args, ulong steamID = 0, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(args);
 		ArgumentNullException.ThrowIfNull(bot);
@@ -43,9 +44,9 @@ public class ResetAPIKeyPlugin : IBotCommand2
 		};
 	}
 
-	private static async Task<string?> ResponseResetAPIKey(EAccess access, Bot bot)
+	private static async Task<string?> ResponseResetAPIKey(EBotUserAccess access, Bot bot)
 	{
-		if (access < EAccess.Master)
+		if (access < EBotUserAccess.Master)
 		{
 			return null;
 		}
@@ -61,7 +62,7 @@ public class ResetAPIKeyPlugin : IBotCommand2
 		return Commands.FormatBotResponse(result ? Strings.Success : Strings.WarningFailed, bot.BotName);
 	}
 
-	private static async Task<string?> ResponseResetAPIKey(EAccess access, string botNames, ulong steamID)
+	private static async Task<string?> ResponseResetAPIKey(EBotUserAccess access, string botNames, ulong steamID)
 	{
 		var bots = Bot.GetBots(botNames);
 		if ((bots == null) || (bots.Count == 0))
